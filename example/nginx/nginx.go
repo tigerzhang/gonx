@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"strconv"
 )
 
 var conf string
@@ -60,6 +61,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	var bytes_sent_per_seconds map[string]int
+	bytes_sent_per_seconds = make(map[string]int)
 	for {
 		rec, err := reader.Read()
 		if err == io.EOF {
@@ -68,6 +71,17 @@ func main() {
 			panic(err)
 		}
 		// Process the record... e.g.
-		fmt.Printf("Parsed entry: %+v\n", rec)
+		// fmt.Printf("Parsed entry: %+v\n", rec)
+		timestamp, err := rec.Field("time_local")
+		bytes_sent, err := rec.Field("body_bytes_sent")
+		// fmt.Printf("timestamp %v bytes sent %v\n", timestamp, bytes_sent)
+		i, _ := bytes_sent_per_seconds[timestamp] 
+		bytes, err := strconv.Atoi(bytes_sent)
+		i += bytes
+		bytes_sent_per_seconds[timestamp] = i
+	}
+
+	for key, value := range bytes_sent_per_seconds {
+		fmt.Println(key, value)
 	}
 }
